@@ -30,30 +30,47 @@ const Checkout: React.FC = () => {
     };
 
     const handleConfirm = async () => {
+  if (!agreed) return alert("Please agree to terms and safety policy");
+
   try {
-    console.log("Processing payment...");
+    const userNameInput = document.querySelector<HTMLInputElement>(
+      'input[placeholder="Enter your first name"]'
+    );
+    const userEmailInput = document.querySelector<HTMLInputElement>(
+      'input[placeholder="Enter your email"]'
+    );
 
-    // Simulate delay (optional)
-    await new Promise((res) => setTimeout(res, 1000));
-
-    // ✅ Create booking data (no undefined variables now)
     const bookingData = {
-      refId: "REF-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
+      userName: userNameInput?.value || "",
+      userEmail: userEmailInput?.value || "",
       experience: "Kayaking",
       date: "2025-10-22",
       time: "09:00 AM",
-      total: discountedTotal.toFixed(0),
+      total: discountedTotal,
     };
 
-    // Store booking data
-    localStorage.setItem("bookingData", JSON.stringify(bookingData));
+    const response = await fetch("http://localhost:5000/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bookingData),
+    });
 
-    // Navigate to result page
-    navigate("/result");
+    const result = await response.json();
+
+    if (response.ok) {
+      console.log("✅ Booking Success:", result);
+      navigate("/result");
+    } else {
+      alert(result.message || "Booking failed");
+    }
   } catch (error) {
-    console.error("Payment failed:", error);
+    console.error("Booking error:", error);
+    alert("Something went wrong while confirming booking");
   }
 };
+
+
+
 
 
 
@@ -168,7 +185,7 @@ const Checkout: React.FC = () => {
                         {applied && (
                             <>
                                 <span>Discount</span>
-                                <span className="text-green-600">-₹{discount.toFixed(0)}</span>
+                                <span className="text-green-600 text-right">-₹{discount.toFixed(0)}</span>
                             </>
                         )}
 

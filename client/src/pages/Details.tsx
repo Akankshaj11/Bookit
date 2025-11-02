@@ -1,12 +1,20 @@
 
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import sampleImg from "../assets/pic.png";
 
 const Details: React.FC = () => {
   const navigate = useNavigate();
+
+  const { id } = useParams();
+const [details, setDetails] = useState<any>(null);
+const [dates, setDates] = useState<string[]>([]);
+const [timeSlots, setTimeSlots] = useState<{ time: string; slots: number }[]>([]);
+
+
+
   const [quantity, setQuantity] = useState(1);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -21,18 +29,55 @@ const Details: React.FC = () => {
 
   const isFormComplete = selectedDate && selectedTime;
 
-  const basePrice = 999;
-  const tax = 50;
-  const subtotal = basePrice * quantity;
-  const total = subtotal + tax;
+ 
 
-  const dates = ["Oct 22", "Oct 23", "Oct 24", "Oct 25", "Oct 26"];
-  const timeSlots = [
-    { time: "07:00 AM", slots: 4 },
-    { time: "09:00 AM", slots: 0 },
-    { time: "11:00 AM", slots: 2 },
-    { time: "01:00 PM", slots: 0 },
-  ];
+
+
+useEffect(() => {
+  fetch(`http://localhost:5000/api/experiences/${id}`)
+    .then((res) => res.json())
+    .then((data) => {
+      setDetails(data);
+      setDates(data.availableDates || []);
+      setTimeSlots(data.timeSlots || []);
+    })
+    .catch((err) => console.error("Error fetching details:", err));
+}, [id]);
+
+
+const basePrice = details?.price || 999;
+const tax = 50;
+const subtotal = basePrice * quantity;
+const total = subtotal + tax;
+
+
+const handleConfirm = async () => {
+  if (!isFormComplete) return;
+
+  const bookingData = {
+    experienceId: id,
+    date: selectedDate,
+    time: selectedTime,
+    quantity,
+    total,
+  };
+
+  try {
+    await fetch("http://localhost:5000/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bookingData),
+    });
+
+    navigate("/checkout");
+  } catch (error) {
+    console.error("Booking error:", error);
+  }
+};
+
+
+
+ 
 
   return (
     <div className="min-h-screen px-[124px] py-10 max-lg:px-6">
@@ -49,18 +94,31 @@ const Details: React.FC = () => {
       <div className="flex gap-8 max-lg:flex-col">
         {/* Left: Image & Info */}
         <div className="w-[765px] max-lg:w-full">
-          <img
+          {/* <img
             src={sampleImg}
             alt="Place"
             className="w-[765px] h-[381px] object-cover rounded-lg mb-6 max-lg:w-full"
-          />
+          /> */}
+
+          <img
+  src={details?.image || sampleImg}
+  alt={details?.title || "Experience"}
+  className="w-[765px] h-[381px] object-cover rounded-lg mb-6 max-lg:w-full"
+/>
+
 
           {/* Title & Description */}
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Malpe Beach</h2>
+          {/* <h2 className="text-xl font-bold text-gray-800 mb-2">Malpe Beach</h2>
           <p className="text-gray-700 mb-4">
             A serene beach with golden sands and calm waters. Perfect for family
             outings and relaxation.
-          </p>
+          </p> */}
+
+          <h2 className="text-xl font-bold text-gray-800 mb-2">
+  {details?.title || "Loading..."}
+</h2>
+<p className="text-gray-700 mb-4">{details?.description || ""}</p>
+
 
           {/* Choose Date */}
           <h3 className="text-md font-semibold text-gray-800 mb-2">
@@ -164,17 +222,26 @@ const Details: React.FC = () => {
           </div>
 
           {/* Confirm Button */}
+
+
           <button
             disabled={!isFormComplete}
-            onClick={() => {
-              if (isFormComplete) navigate("/checkout");
-            }}
+            onClick={handleConfirm}
+            
+            // {() => {
+            //   if (handleConfirm) navigate("/checkout");
+            // }}
             className={`w-full py-3 rounded-md font-semibold transition-all ${
               isFormComplete
                 ? "bg-[#FFD643] text-gray-800 hover:bg-yellow-400"
                 : "bg-gray-400 text-gray-700 cursor-not-allowed"
             }`}
           >
+
+
+
+
+
             Confirm
           </button>
         </div>
