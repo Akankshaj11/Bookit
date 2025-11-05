@@ -6,22 +6,20 @@ interface HomeProps {
 }
 
 interface Experience {
-  _id: string; // changed from id → _id
+  _id: string;
   title: string;
   location: string;
   price: number;
   description: string;
   image: string;
-  date?: string; // optional if not always present
+  date?: string;
 }
-
 
 const Home: React.FC<HomeProps> = ({ searchQuery }) => {
   const [cards, setCards] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // ✅ Fetch experiences dynamically from backend API
     fetch("http://localhost:5000/api/experiences")
       .then((res) => res.json())
       .then((data) => {
@@ -34,7 +32,6 @@ const Home: React.FC<HomeProps> = ({ searchQuery }) => {
       });
   }, []);
 
-  // ✅ Filter experiences based on search query
   const filteredCards = cards.filter(
     (card) =>
       card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -51,19 +48,19 @@ const Home: React.FC<HomeProps> = ({ searchQuery }) => {
   }
 
   return (
-    <div className="min-h-screen px-[120px] py-15">
-      <div className="grid grid-cols-4 gap-5">
+    <div className="min-h-screen px-4 sm:px-8 md:px-16 lg:px-24 py-10">
+      {/* grid: 1 -> 2 -> 3 -> 4 (4 at lg and above) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredCards.map((card) => (
           <Card
-  key={card._id}
-  id={card._id}
-  title={card.title}
-  location={card.location}
-  price={card.price.toString()}
-  description={card.description}
-  image={card.image}
-/>
-
+            key={card._id}
+            id={card._id}
+            title={card.title}
+            location={card.location}
+            price={card.price.toString()}
+            description={card.description}
+            image={card.image}
+          />
         ))}
       </div>
     </div>
